@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
@@ -60,5 +61,41 @@ class AuthController extends Controller
             ], 500);
         }
     }
-}
+    public function login(Request $request)
+    {
+        // 1️⃣ التحقق من صحة البيانات المُدخلة
+        $validator = Validator::make($request->all(), [
+            'email'    => 'required|email',
+            'password' => 'required|string',
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // 2️⃣ البحث عن المستخدم بالإيميل
+        $user = User::where('email', $request->email)->first();
+
+        // 3️⃣ التحقق من وجود المستخدم وصحة كلمة المرور معاً
+        if (! $user || ! Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+            ], 401);
+        }
+
+        // 4️⃣ توليد توكن جديد لهذا المستخدم
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // 5️⃣ إرجاع التوكن + بيانات المستخدم (بما فيها الـ role)
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تسجيل الدخول بنجاح',
+            'user'    => $user,
+            'token'   => $token,
+        ], 200);
+    }
+}
