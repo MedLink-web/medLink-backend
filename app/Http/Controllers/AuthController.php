@@ -92,7 +92,7 @@ class AuthController extends Controller
 
         // 5️⃣ إرجاع التوكن + بيانات المستخدم (بما فيها الـ role)
         return response()->json([
-            'success' => true,
+            'success' => true, 
             'message' => 'تم تسجيل الدخول بنجاح',
             'user'    => $user,
             'token'   => $token,
