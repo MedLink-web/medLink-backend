@@ -29,4 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/admin/pharmacy-requests/{id}/approve', [PharmacyRequestController::class, 'approve']);
 
+    Route::post('/admin/pharmacy-requests/{id}/reject', [PharmacyRequestController::class, 'reject']);
+
 });

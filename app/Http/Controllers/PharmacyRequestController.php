@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\Pharmacy;
 use App\Mail\PharmacyApprovedMail;
+use App\Mail\PharmacyRejectedMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -149,6 +150,41 @@ class PharmacyRequestController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'تم قبول الطلب وإنشاء حساب الصيدلية بنجاح',
+        ]);
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $pharmacyRequest = PharmacyRequest::find($id);
+
+        if (!$pharmacyRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الطلب غير موجود',
+            ], 404);
+        }
+
+        if ($pharmacyRequest->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذا الطلب تمت معالجته مسبقاً',
+            ], 400);
+        }
+
+        // 1️⃣ تحديث حالة الطلب - يبقى محفوظ للمراجعة (auditing)
+        $pharmacyRequest->update(['status' => 'rejected']);
+
+        // 2️⃣ إرسال إيميل إشعار للصيدلية
+        Mail::to($pharmacyRequest->pharmacy_email)->send(
+            new PharmacyRejectedMail(
+                $pharmacyRequest->pharmacy_name,
+                $request->reason ?? 'لم يتم استيفاء متطلبات التسجيل'
+            )
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم رفض الطلب بنجاح',
         ]);
     }
 }
