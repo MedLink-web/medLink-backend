@@ -35,4 +35,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Patient::class);
     }
+    // العلاقة مع Clinic - المستخدم من نوع clinic عنده عيادة واحدة
+    public function clinic()
+    {
+        return $this->hasOne(Clinic::class);
+    }
 }
