@@ -5,6 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\PharmacyRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use App\Models\Pharmacy;
+use App\Mail\PharmacyApprovedMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class PharmacyRequestController extends Controller
 {
@@ -87,5 +93,62 @@ class PharmacyRequestController extends Controller
             'data'    => $pharmacyRequest,
         ]);
     }
-    
+    public function approve($id)
+    {
+        $pharmacyRequest = PharmacyRequest::find($id);
+
+        if (!$pharmacyRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الطلب غير موجود',
+            ], 404);
+        }
+
+        if ($pharmacyRequest->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذا الطلب تمت معالجته مسبقاً',
+            ], 400);
+        }
+
+        // 1️⃣ إنشاء كلمة سر عشوائية
+        $password = Str::random(10);
+
+        // 2️⃣ إنشاء حساب المستخدم بجدول users
+        $user = User::create([
+            'full_name' => $pharmacyRequest->pharmacy_name,
+            'email'     => $pharmacyRequest->pharmacy_email,
+            'phone'     => $pharmacyRequest->pharmacy_phone,
+            'password'  => Hash::make($password),
+            'role'      => 'pharmacy',
+        ]);
+
+        // 3️⃣ إنشاء سجل الصيدلية بجدول pharmacies
+        Pharmacy::create([
+            'user_id'              => $user->id,
+            'pharmacy_name'        => $pharmacyRequest->pharmacy_name,
+            'pharmacy_address'     => $pharmacyRequest->pharmacy_address,
+            'pharmacy_phone'       => $pharmacyRequest->pharmacy_phone,
+            'pharmacy_email'       => $pharmacyRequest->pharmacy_email,
+            'pharmacy_description' => $pharmacyRequest->pharmacy_description,
+            'document_path'        => $pharmacyRequest->document_path,
+        ]);
+
+        // 4️⃣ تحديث حالة الطلب
+        $pharmacyRequest->update(['status' => 'approved']);
+
+        // 5️⃣ إرسال الإيميل
+        Mail::to($pharmacyRequest->pharmacy_email)->send(
+            new PharmacyApprovedMail(
+                $pharmacyRequest->pharmacy_name,
+                $pharmacyRequest->pharmacy_email,
+                $password
+            )
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم قبول الطلب وإنشاء حساب الصيدلية بنجاح',
+        ]);
+    }
 }

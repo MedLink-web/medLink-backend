@@ -26,5 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/pharmacy-requests',       [PharmacyRequestController::class, 'index']);
 
     Route::get('/admin/pharmacy-requests/{id}',  [PharmacyRequestController::class, 'show']);
-    
+
+    Route::post('/admin/pharmacy-requests/{id}/approve', [PharmacyRequestController::class, 'approve']);
+
 });
