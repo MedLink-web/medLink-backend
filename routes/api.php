@@ -11,6 +11,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/clinic-requests', [ClinicRequestController::class, 'store']);
 Route::post('/pharmacy-requests', [PharmacyRequestController::class, 'store']);
+Route::get('/admin/clinic-requests/all', [ClinicRequestController::class, 'all']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);

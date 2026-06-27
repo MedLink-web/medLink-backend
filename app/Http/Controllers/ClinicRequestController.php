@@ -192,4 +192,16 @@ class ClinicRequestController extends Controller
             'message' => 'تم رفض الطلب بنجاح',
         ]);
     }
+
+    // جلب كل الطلبات بغض النظر عن الحالة
+    public function all()
+    {
+        $requests = ClinicRequest::orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $requests,
+            'count'   => $requests->count(),
+        ]);
+    }
 }
