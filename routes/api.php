@@ -8,6 +8,7 @@ use App\Http\Controllers\PharmacyRequestController;
 use App\Http\Controllers\ClinicProfileController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ClinicController;
+use App\Http\Controllers\AppointmentSlotController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -45,6 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('/clinic/doctors/{id}', [DoctorController::class, 'update']);
     Route::delete('/clinic/doctors/{id}', [DoctorController::class, 'destroy']);
+
+    Route::get('/clinic/slots',  [AppointmentSlotController::class, 'index']);
+    Route::post('/clinic/slots', [AppointmentSlotController::class, 'store']);
 
 
 });
