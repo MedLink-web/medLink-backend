@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('pharmacy_address');
             $table->string('pharmacy_phone');
             $table->string('pharmacy_email')->unique();
+            $table->string('license_number')->nullable();
             $table->text('pharmacy_description')->nullable();
-            $table->string('document_path')->nullable();
             $table->timestamps();
         });
     }

@@ -22,8 +22,8 @@ class PharmacyRequestController extends Controller
             'pharmacy_address'     => 'required|string|max:255',
             'pharmacy_phone'       => 'required|string|max:15',
             'pharmacy_email'       => 'required|email|unique:pharmacy_requests,pharmacy_email',
+            'license_number'       => 'required|string|max:100',
             'pharmacy_description' => 'nullable|string',
-            'license_number' => 'required|string|max:100',
         ], [
             'pharmacy_name.required'    => 'اسم الصيدلية مطلوب',
             'pharmacy_address.required' => 'عنوان الصيدلية مطلوب',

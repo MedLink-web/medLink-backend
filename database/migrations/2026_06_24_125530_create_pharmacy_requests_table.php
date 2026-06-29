@@ -14,8 +14,8 @@ return new class extends Migration
             $table->string('pharmacy_address');
             $table->string('pharmacy_phone');
             $table->string('pharmacy_email')->unique();
-            $table->text('pharmacy_description')->nullable();
             $table->string('license_number')->nullable();
+            $table->text('pharmacy_description')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
         });
