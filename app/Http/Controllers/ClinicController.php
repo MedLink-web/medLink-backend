@@ -8,9 +8,25 @@ use Illuminate\Http\Request;
 class ClinicController extends Controller
 {
     // جلب كل العيادات
-    public function index()
+    public function index(Request $request)
     {
-        $clinics = Clinic::with('doctors')->get();
+        $query = Clinic::with('doctors');
+
+        // فلتر التخصص إذا موجود
+        if ($request->has('specialty') && $request->specialty !== '') {
+            $query->where('specialty', $request->specialty);
+        }
+
+        $clinics = $query->get();
+
+        if ($clinics->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data'    => [],
+                'message' => 'لا توجد عيادات متاحة لهذا التخصص',
+                'count'   => 0,
+            ]);
+        }
 
         $data = $clinics->map(function ($clinic) {
             return [
