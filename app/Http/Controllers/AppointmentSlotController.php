@@ -99,4 +99,67 @@ class AppointmentSlotController extends Controller
             ],
         ], 201);
     }
+    // 3️⃣ تعديل slot
+    public function update(Request $request, $id)
+    {
+        $clinic = $request->user()->clinic;
+
+        if (!$clinic) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على بيانات العيادة',
+            ], 404);
+        }
+
+        // تأكد إنو الـ slot تابع لهاي العيادة
+        $slot = AppointmentSlot::where('id', $id)
+            ->where('clinic_id', $clinic->id)
+            ->first();
+
+        if (!$slot) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الموعد غير موجود',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'date'         => 'sometimes|date|after_or_equal:today',
+            'start_time'   => 'sometimes|date_format:H:i',
+            'end_time'     => 'sometimes|date_format:H:i|after:start_time',
+            'max_capacity' => 'sometimes|integer|min:' . $slot->booked_count,
+        ], [
+            'date.after_or_equal' => 'التاريخ يجب أن يكون اليوم أو في المستقبل',
+            'end_time.after'      => 'وقت النهاية يجب أن يكون بعد وقت البداية',
+            'max_capacity.min'    => 'الحد الأقصى لا يمكن أن يكون أقل من عدد الحجوزات الحالية (' . $slot->booked_count . ')',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $slot->update($request->only([
+            'date',
+            'start_time',
+            'end_time',
+            'max_capacity',
+        ]));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تحديث الموعد بنجاح',
+            'data'    => [
+                'id'                 => $slot->id,
+                'date'               => $slot->date,
+                'start_time'         => $slot->start_time,
+                'end_time'           => $slot->end_time,
+                'max_capacity'       => $slot->max_capacity,
+                'booked_count'       => $slot->booked_count,
+                'remaining_capacity' => $slot->remaining_capacity,
+            ],
+        ]);
+    }
 }

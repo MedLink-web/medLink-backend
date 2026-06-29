@@ -50,5 +50,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/clinic/slots',  [AppointmentSlotController::class, 'index']);
     Route::post('/clinic/slots', [AppointmentSlotController::class, 'store']);
 
-
+    Route::put('/clinic/slots/{id}', [AppointmentSlotController::class, 'update']);
 });
