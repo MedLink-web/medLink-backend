@@ -7,6 +7,7 @@ use App\Http\Controllers\ClinicRequestController;
 use App\Http\Controllers\PharmacyRequestController;
 use App\Http\Controllers\ClinicProfileController;
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\ClinicController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -14,6 +15,8 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/clinic-requests', [ClinicRequestController::class, 'store']);
 Route::post('/pharmacy-requests', [PharmacyRequestController::class, 'store']);
 Route::get('/admin/clinic-requests/all', [ClinicRequestController::class, 'all']);
+Route::get('/clinics',      [ClinicController::class, 'index']);
+Route::get('/clinics/{id}', [ClinicController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
@@ -42,4 +45,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('/clinic/doctors/{id}', [DoctorController::class, 'update']);
     Route::delete('/clinic/doctors/{id}', [DoctorController::class, 'destroy']);
+
+
 });
