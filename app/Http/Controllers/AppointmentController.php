@@ -145,4 +145,60 @@ class AppointmentController extends Controller
             ]);
         });
     }
+    // 3️⃣ جلب مواعيد المريض
+    public function myAppointments(Request $request)
+    {
+        $user    = $request->user();
+        $patient = $user->patient;
+
+        if (!$patient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذه الخدمة متاحة للمرضى فقط',
+            ], 403);
+        }
+
+        $appointments = Appointment::where('patient_id', $patient->id)
+            ->with(['slot', 'clinic'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($appointment) {
+                return [
+                    'id'           => $appointment->id,
+                    'status'       => $appointment->status,
+                    'status_label' => match ($appointment->status) {
+                        'confirmed' => 'مؤكد',
+                        'cancelled' => 'ملغي',
+                        'pending'   => 'قيد الانتظار',
+                        default     => $appointment->status,
+                    },
+                    'clinic'  => [
+                        'id'          => $appointment->clinic?->id,
+                        'name'        => $appointment->clinic?->clinic_name,
+                        'address'     => $appointment->clinic?->clinic_address,
+                        'phone'       => $appointment->clinic?->clinic_phone,
+                        'specialty'   => $appointment->clinic?->specialty,
+                    ],
+                    'slot' => [
+                        'date'       => $appointment->slot?->date,
+                        'start_time' => $appointment->slot?->start_time,
+                        'end_time'   => $appointment->slot?->end_time,
+                    ],
+                ];
+            });
+
+        if ($appointments->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data'    => [],
+                'message' => 'لا توجد مواعيد مسجّلة حتى الآن',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $appointments,
+            'count'   => $appointments->count(),
+        ]);
+    }
 }
