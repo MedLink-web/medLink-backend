@@ -7,6 +7,8 @@ use App\Models\AppointmentSlot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Patient;
+use App\Models\User;
 
 class AppointmentController extends Controller
 {
@@ -192,6 +194,61 @@ class AppointmentController extends Controller
                 'success' => true,
                 'data'    => [],
                 'message' => 'لا توجد مواعيد مسجّلة حتى الآن',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $appointments,
+            'count'   => $appointments->count(),
+        ]);
+    }
+    // 4️⃣ جلب حجوزات العيادة (للأدمن)
+    public function clinicBookings(Request $request)
+    {
+        $clinic = $request->user()->clinic;
+
+        if (!$clinic) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على بيانات العيادة',
+            ], 404);
+        }
+
+        $appointments = Appointment::where('clinic_id', $clinic->id)
+            ->with(['slot', 'patient.user'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($appointment) {
+                return [
+                    'id'           => $appointment->id,
+                    'status'       => $appointment->status,
+                    'status_label' => match ($appointment->status) {
+                        'confirmed' => 'مؤكد',
+                        'cancelled' => 'ملغي',
+                        'pending'   => 'قيد الانتظار',
+                        default     => $appointment->status,
+                    },
+                    'patient' => [
+                        'id'    => $appointment->patient?->id,
+                        'name'  => $appointment->patient?->user?->full_name,
+                        'phone' => $appointment->patient?->user?->phone,
+                        'email' => $appointment->patient?->user?->email,
+                    ],
+                    'slot' => [
+                        'date'       => $appointment->slot?->date,
+                        'start_time' => $appointment->slot?->start_time,
+                        'end_time'   => $appointment->slot?->end_time,
+                    ],
+                    'booked_at' => $appointment->created_at->format('Y-m-d H:i'),
+                ];
+            });
+
+        if ($appointments->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data'    => [],
+                'message' => 'لا توجد حجوزات حتى الآن',
             ]);
         }
 
