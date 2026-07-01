@@ -10,6 +10,7 @@ use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ClinicController;
 use App\Http\Controllers\AppointmentSlotController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\DoctorAppointmentController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -61,6 +62,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/appointments/{id}/cancel', [AppointmentController::class, 'cancel']);
 
     Route::get('/appointments/my', [AppointmentController::class, 'myAppointments']);
-    
+
     Route::get('/clinic/bookings', [AppointmentController::class, 'clinicBookings']);
+
+    Route::get('/doctor/appointments', [DoctorAppointmentController::class, 'index']);
+
 });
