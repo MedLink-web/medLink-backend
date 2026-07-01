@@ -63,4 +63,53 @@ class DoctorAppointmentController extends Controller
             'count'   => $appointments->count(),
         ]);
     }
+    // جلب معلومات مريض محدد
+    public function patientInfo(Request $request, $appointmentId)
+    {
+        $user   = $request->user();
+        $doctor = $user->doctor;
+
+        if (!$doctor) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذه الخدمة متاحة للأطباء فقط',
+            ], 403);
+        }
+
+        // تأكد إنو الموعد تابع لعيادة الدكتور
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('clinic_id', $doctor->clinic_id)
+            ->where('status', 'confirmed')
+            ->with(['patient.user', 'slot'])
+            ->first();
+
+        if (!$appointment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'غير مصرح لك بالوصول لهذه المعلومات',
+            ], 403);
+        }
+
+        $patient = $appointment->patient;
+        $user    = $patient?->user;
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'patient' => [
+                    'id'        => $patient?->id,
+                    'full_name' => $user?->full_name,
+                    'phone'     => $user?->phone,
+                    'email'     => $user?->email,
+                ],
+                'appointment' => [
+                    'id'         => $appointment->id,
+                    'date'       => $appointment->slot?->date,
+                    'start_time' => $appointment->slot?->start_time,
+                    'end_time'   => $appointment->slot?->end_time,
+                    'status'     => $appointment->status,
+                ],
+            ],
+        ]);
+    }
 }
