@@ -162,4 +162,38 @@ class AppointmentSlotController extends Controller
             ],
         ]);
     }
+    // 4️⃣ جلب الـ slots المتاحة للمريض (public)
+    public function availableSlots($clinicId)
+    {
+        $slots = AppointmentSlot::where('clinic_id', $clinicId)
+            ->where('date', '>=', now()->toDateString()) // بس المواعيد المستقبلية
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->get()
+            ->map(function ($slot) {
+                return [
+                    'id'                 => $slot->id,
+                    'date'               => $slot->date,
+                    'start_time'         => $slot->start_time,
+                    'end_time'           => $slot->end_time,
+                    'max_capacity'       => $slot->max_capacity,
+                    'booked_count'       => $slot->booked_count,
+                    'remaining_capacity' => $slot->remaining_capacity,
+                    'is_fully_booked'    => $slot->isFullyBooked(),
+                ];
+            });
+
+        if ($slots->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data'    => [],
+                'message' => 'لا توجد مواعيد متاحة حالياً',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $slots,
+        ]);
+    }
 }

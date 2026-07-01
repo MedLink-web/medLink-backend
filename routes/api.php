@@ -9,6 +9,7 @@ use App\Http\Controllers\ClinicProfileController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ClinicController;
 use App\Http\Controllers\AppointmentSlotController;
+use App\Http\Controllers\AppointmentController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -18,6 +19,10 @@ Route::post('/pharmacy-requests', [PharmacyRequestController::class, 'store']);
 Route::get('/admin/clinic-requests/all', [ClinicRequestController::class, 'all']);
 Route::get('/clinics',      [ClinicController::class, 'index']);
 Route::get('/clinics/{id}', [ClinicController::class, 'show']);
+// Public Routes
+Route::get('/clinics',                        [ClinicController::class,          'index']);
+Route::get('/clinics/{id}',                   [ClinicController::class,          'show']);
+Route::get('/clinics/{id}/slots',             [AppointmentSlotController::class, 'availableSlots']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
@@ -51,4 +56,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/clinic/slots', [AppointmentSlotController::class, 'store']);
 
     Route::put('/clinic/slots/{id}', [AppointmentSlotController::class, 'update']);
+    Route::post('/appointments', [AppointmentController::class, 'store']);
 });

@@ -1,0 +1,93 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Appointment;
+use App\Models\AppointmentSlot;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+
+class AppointmentController extends Controller
+{
+    // 1️⃣ حجز موعد
+    public function store(Request $request)
+    {
+        $user    = $request->user();
+        $patient = $user->patient;
+
+        if (!$patient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذه الخدمة متاحة للمرضى فقط',
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'slot_id' => 'required|exists:appointment_slots,id',
+        ], [
+            'slot_id.required' => 'يرجى اختيار موعد',
+            'slot_id.exists'   => 'الموعد المختار غير موجود',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // استخدام Transaction لضمان التزامن
+        return DB::transaction(function () use ($request, $patient) {
+
+            // 1. جلب الـ slot مع lock عشان ما يصير تعارض
+            $slot = AppointmentSlot::lockForUpdate()
+                                   ->find($request->slot_id);
+
+            // 2. تحقق من الـ capacity
+            if ($slot->isFullyBooked()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'عذراً، هذا الموعد ممتلئ',
+                ], 400);
+            }
+
+            // 3. تحقق إنو المريض ما حجز نفس الـ slot من قبل
+            $existingBooking = Appointment::where('patient_id', $patient->id)
+                                          ->where('slot_id', $slot->id)
+                                          ->where('status', '!=', 'cancelled')
+                                          ->first();
+
+            if ($existingBooking) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'لقد قمت بحجز هذا الموعد مسبقاً',
+                ], 400);
+            }
+
+            // 4. إنشاء الحجز
+            $appointment = Appointment::create([
+                'patient_id' => $patient->id,
+                'clinic_id'  => $slot->clinic_id,
+                'slot_id'    => $slot->id,
+                'status'     => 'confirmed',
+            ]);
+
+            // 5. تحديث عدد الحجوزات
+            $slot->increment('booked_count');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم حجز الموعد بنجاح',
+                'data'    => [
+                    'appointment_id'     => $appointment->id,
+                    'date'               => $slot->date,
+                    'start_time'         => $slot->start_time,
+                    'end_time'           => $slot->end_time,
+                    'status'             => $appointment->status,
+                    'remaining_capacity' => $slot->remaining_capacity - 1,
+                ],
+            ], 201);
+        });
+    }
+}
