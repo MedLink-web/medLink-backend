@@ -42,7 +42,7 @@ class AppointmentController extends Controller
 
             // 1. جلب الـ slot مع lock عشان ما يصير تعارض
             $slot = AppointmentSlot::lockForUpdate()
-                                   ->find($request->slot_id);
+                ->find($request->slot_id);
 
             // 2. تحقق من الـ capacity
             if ($slot->isFullyBooked()) {
@@ -54,9 +54,9 @@ class AppointmentController extends Controller
 
             // 3. تحقق إنو المريض ما حجز نفس الـ slot من قبل
             $existingBooking = Appointment::where('patient_id', $patient->id)
-                                          ->where('slot_id', $slot->id)
-                                          ->where('status', '!=', 'cancelled')
-                                          ->first();
+                ->where('slot_id', $slot->id)
+                ->where('status', '!=', 'cancelled')
+                ->first();
 
             if ($existingBooking) {
                 return response()->json([
@@ -88,6 +88,61 @@ class AppointmentController extends Controller
                     'remaining_capacity' => $slot->remaining_capacity - 1,
                 ],
             ], 201);
+        });
+    }
+    // 2️⃣ إلغاء موعد
+    public function cancel(Request $request, $id)
+    {
+        $user    = $request->user();
+        $patient = $user->patient;
+
+        if (!$patient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذه الخدمة متاحة للمرضى فقط',
+            ], 403);
+        }
+
+        // تأكد إنو الموعد تابع لهاد المريض
+        $appointment = Appointment::where('id', $id)
+            ->where('patient_id', $patient->id)
+            ->first();
+
+        if (!$appointment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الموعد غير موجود',
+            ], 404);
+        }
+
+        // تحقق إنو الموعد مش ملغي مسبقاً
+        if ($appointment->status === 'cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذا الموعد ملغي مسبقاً',
+            ], 400);
+        }
+
+        return DB::transaction(function () use ($appointment) {
+
+            // 1. تغيير حالة الموعد
+            $appointment->update(['status' => 'cancelled']);
+
+            // 2. تحديث عدد الحجوزات بالـ slot
+            $slot = $appointment->slot;
+            if ($slot && $slot->booked_count > 0) {
+                $slot->decrement('booked_count');
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم إلغاء الموعد بنجاح',
+                'data'    => [
+                    'appointment_id'     => $appointment->id,
+                    'status'             => 'cancelled',
+                    'remaining_capacity' => $slot ? $slot->fresh()->remaining_capacity : null,
+                ],
+            ]);
         });
     }
 }

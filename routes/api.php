@@ -57,4 +57,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::put('/clinic/slots/{id}', [AppointmentSlotController::class, 'update']);
     Route::post('/appointments', [AppointmentController::class, 'store']);
+
+    Route::post('/appointments/{id}/cancel', [AppointmentController::class, 'cancel']);
 });
