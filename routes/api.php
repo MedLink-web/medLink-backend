@@ -11,6 +11,8 @@ use App\Http\Controllers\ClinicController;
 use App\Http\Controllers\AppointmentSlotController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\DoctorAppointmentController;
+use App\Http\Controllers\PrescriptionController;
+
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -66,7 +68,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/clinic/bookings', [AppointmentController::class, 'clinicBookings']);
 
     Route::get('/doctor/appointments', [DoctorAppointmentController::class, 'index']);
-    
+
     Route::get('/doctor/appointments/{id}/patient', [DoctorAppointmentController::class, 'patientInfo']);
+
+    Route::post('/prescriptions', [PrescriptionController::class, 'store']);
 
 });
