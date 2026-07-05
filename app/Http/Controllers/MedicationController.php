@@ -174,4 +174,35 @@ class MedicationController extends Controller
             ],
         ]);
     }
+
+    // 5️⃣ حذف دواء
+    public function destroy(Request $request, $id)
+    {
+        $pharmacy = $request->user()->pharmacy;
+
+        if (!$pharmacy) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على بيانات الصيدلية',
+            ], 404);
+        }
+
+        $medication = Medication::where('id', $id)
+            ->where('pharmacy_id', $pharmacy->id)
+            ->first();
+
+        if (!$medication) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الدواء غير موجود',
+            ], 404);
+        }
+
+        $medication->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم حذف الدواء بنجاح',
+        ]);
+    }
 }
