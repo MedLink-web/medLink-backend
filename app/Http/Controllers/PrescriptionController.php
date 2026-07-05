@@ -141,4 +141,59 @@ class PrescriptionController extends Controller
             'count'   => $prescriptions->count(),
         ]);
     }
+
+    // جلب وصفات المريض
+    public function patientPrescriptions(Request $request)
+    {
+        $user    = $request->user();
+        $patient = $user->patient;
+
+        if (!$patient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذه الخدمة متاحة للمرضى فقط',
+            ], 403);
+        }
+
+        $prescriptions = Prescription::where('patient_id', $patient->id)
+            ->with(['doctor.user', 'items'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($prescription) {
+                return [
+                    'id'          => $prescription->id,
+                    'date'        => $prescription->created_at->format('Y-m-d'),
+                    'diagnosis'   => $prescription->diagnosis,
+                    'notes'       => $prescription->notes,
+                    'valid_until' => $prescription->valid_until,
+                    'doctor'      => [
+                        'name'      => $prescription->doctor?->user?->full_name,
+                        'specialty' => $prescription->doctor?->specialty,
+                    ],
+                    'items' => $prescription->items->map(function ($item) {
+                        return [
+                            'medication_name' => $item->medication_name,
+                            'dosage'          => $item->dosage,
+                            'frequency'       => $item->frequency,
+                            'duration'        => $item->duration,
+                            'instructions'    => $item->instructions,
+                        ];
+                    }),
+                ];
+            });
+
+        if ($prescriptions->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data'    => [],
+                'message' => 'لا توجد وصفات طبية حتى الآن',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $prescriptions,
+            'count'   => $prescriptions->count(),
+        ]);
+    }
 }
