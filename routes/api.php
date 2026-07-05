@@ -14,6 +14,7 @@ use App\Http\Controllers\DoctorAppointmentController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\PharmacyProfileController;
 use App\Http\Controllers\MedicationController;
+use App\Http\Controllers\MedicationSearchController;
 
 
 
@@ -28,6 +29,7 @@ Route::get('/clinics/{id}', [ClinicController::class, 'show']);
 Route::get('/clinics',                        [ClinicController::class,          'index']);
 Route::get('/clinics/{id}',                   [ClinicController::class,          'show']);
 Route::get('/clinics/{id}/slots',             [AppointmentSlotController::class, 'availableSlots']);
+Route::get('/medications/search', [MedicationSearchController::class, 'search']);
 
 
 Route::middleware('auth:sanctum')->group(function () {
