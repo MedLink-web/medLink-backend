@@ -87,12 +87,20 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // 4️⃣ توليد توكن جديد لهذا المستخدم
+        // 4️⃣ التحقق من أنو الحساب نشط
+        if (!$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'حسابك معطّل، يرجى التواصل مع الإدارة',
+            ], 403);
+        }
+
+        // 5️⃣ توليد توكن جديد لهذا المستخدم
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // 5️⃣ إرجاع التوكن + بيانات المستخدم (بما فيها الـ role)
+        // 6️⃣ إرجاع التوكن + بيانات المستخدم (بما فيها الـ role)
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'message' => 'تم تسجيل الدخول بنجاح',
             'user'    => $user,
             'token'   => $token,

@@ -15,6 +15,8 @@ use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\PharmacyProfileController;
 use App\Http\Controllers\MedicationController;
 use App\Http\Controllers\MedicationSearchController;
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AdminDashboardController;
 
 
 
@@ -93,5 +95,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::delete('/pharmacy/medications/{id}', [MedicationController::class, 'destroy']);
 
+    Route::get('/admin/users',                    [AdminUserController::class, 'index']);
+    Route::patch('/admin/users/{id}/toggle',      [AdminUserController::class, 'toggleActive']);
 
+    Route::get('/admin/statistics', [AdminDashboardController::class, 'statistics']);
 });
