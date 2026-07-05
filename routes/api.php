@@ -13,6 +13,7 @@ use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\DoctorAppointmentController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\PharmacyProfileController;
+use App\Http\Controllers\MedicationController;
 
 
 
@@ -79,4 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/pharmacy/profile', [PharmacyProfileController::class, 'show']);
     Route::put('/pharmacy/profile', [PharmacyProfileController::class, 'update']);
+
+    Route::get('/pharmacy/medications',  [MedicationController::class, 'index']);
+    Route::post('/pharmacy/medications', [MedicationController::class, 'store']);
 });

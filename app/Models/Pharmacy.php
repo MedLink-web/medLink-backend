@@ -22,9 +22,8 @@ class Pharmacy extends Model
         return $this->belongsTo(User::class);
     }
 
-    // علاقة مع Medications (لاحقاً US-35)
-    // public function medications()
-    // {
-    //     return $this->hasMany(PharmacyMedication::class);
-    // }
+    public function medications()
+    {
+        return $this->hasMany(Medication::class);
+    }
 }
