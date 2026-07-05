@@ -29,6 +29,7 @@ Route::get('/clinics',                        [ClinicController::class,         
 Route::get('/clinics/{id}',                   [ClinicController::class,          'show']);
 Route::get('/clinics/{id}/slots',             [AppointmentSlotController::class, 'availableSlots']);
 
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
@@ -89,4 +90,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/pharmacy/medications/{id}/toggle', [MedicationController::class, 'toggleAvailability']);
 
     Route::delete('/pharmacy/medications/{id}', [MedicationController::class, 'destroy']);
+
+
 });

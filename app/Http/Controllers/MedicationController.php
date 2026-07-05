@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 class MedicationController extends Controller
 {
     // 1️⃣ جلب أدوية الصيدلية
+    // 1️⃣ جلب أدوية الصيدلية مع البحث
     public function index(Request $request)
     {
         $pharmacy = $request->user()->pharmacy;
@@ -20,9 +21,27 @@ class MedicationController extends Controller
             ], 404);
         }
 
-        $medications = $pharmacy->medications()
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = $pharmacy->medications()->orderBy('created_at', 'desc');
+
+        // فلتر البحث بالاسم
+        if ($request->has('search') && $request->search !== '') {
+            $query->where('medication_name', 'LIKE', '%' . $request->search . '%');
+        }
+
+        // فلتر الحالة
+        if ($request->has('is_available')) {
+            $query->where('is_available', $request->is_available);
+        }
+
+        $medications = $query->get();
+
+        if ($medications->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data'    => [],
+                'message' => 'لا توجد أدوية في المخزون',
+            ]);
+        }
 
         return response()->json([
             'success' => true,
