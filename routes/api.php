@@ -85,4 +85,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pharmacy/medications', [MedicationController::class, 'store']);
 
     Route::put('/pharmacy/medications/{id}', [MedicationController::class, 'update']);
+
+    Route::patch('/pharmacy/medications/{id}/toggle', [MedicationController::class, 'toggleAvailability']);
 });

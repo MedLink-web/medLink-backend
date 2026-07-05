@@ -133,4 +133,45 @@ class MedicationController extends Controller
             'data'    => $medication->fresh(),
         ]);
     }
+
+    // 4️⃣ تغيير حالة توفر الدواء
+    public function toggleAvailability(Request $request, $id)
+    {
+        $pharmacy = $request->user()->pharmacy;
+
+        if (!$pharmacy) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على بيانات الصيدلية',
+            ], 404);
+        }
+
+        $medication = Medication::where('id', $id)
+            ->where('pharmacy_id', $pharmacy->id)
+            ->first();
+
+        if (!$medication) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الدواء غير موجود',
+            ], 404);
+        }
+
+        // نعكس الحالة الحالية
+        $medication->update([
+            'is_available' => !$medication->is_available,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $medication->is_available
+                ? 'تم تحديث الدواء إلى متوفر'
+                : 'تم تحديث الدواء إلى غير متوفر',
+            'data'    => [
+                'id'           => $medication->id,
+                'medication_name' => $medication->medication_name,
+                'is_available' => $medication->is_available,
+            ],
+        ]);
+    }
 }
