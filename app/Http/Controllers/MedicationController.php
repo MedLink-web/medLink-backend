@@ -76,4 +76,61 @@ class MedicationController extends Controller
             'data'    => $medication,
         ], 201);
     }
+
+    // 3️⃣ تعديل دواء
+    public function update(Request $request, $id)
+    {
+        $pharmacy = $request->user()->pharmacy;
+
+        if (!$pharmacy) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم العثور على بيانات الصيدلية',
+            ], 404);
+        }
+
+        // تأكد إنو الدواء تابع لهاي الصيدلية
+        $medication = Medication::where('id', $id)
+            ->where('pharmacy_id', $pharmacy->id)
+            ->first();
+
+        if (!$medication) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الدواء غير موجود',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'medication_name' => 'required|string|max:255',
+            'price'           => 'required|numeric|min:0',
+            'is_available'    => 'boolean',
+            'description'     => 'nullable|string',
+        ], [
+            'medication_name.required' => 'اسم الدواء مطلوب',
+            'price.required'           => 'السعر مطلوب',
+            'price.numeric'            => 'السعر يجب أن يكون رقماً',
+            'price.min'                => 'السعر يجب أن يكون أكبر من 0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $medication->update([
+            'medication_name' => $request->medication_name,
+            'price'           => $request->price,
+            'is_available'    => $request->is_available ?? $medication->is_available,
+            'description'     => $request->description,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تحديث بيانات الدواء بنجاح',
+            'data'    => $medication->fresh(),
+        ]);
+    }
 }
