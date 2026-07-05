@@ -72,5 +72,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/doctor/appointments/{id}/patient', [DoctorAppointmentController::class, 'patientInfo']);
 
     Route::post('/prescriptions', [PrescriptionController::class, 'store']);
-
+    Route::get('/prescriptions', [PrescriptionController::class, 'index']);
+  
 });

@@ -31,7 +31,7 @@ class PrescriptionController extends Controller
             'notes'                  => 'nullable|string',
             'valid_until'            => 'nullable|date|after:today',
             'items'                  => 'required|array|min:1',
-            'items.*.medication_name'=> 'required|string|max:255',
+            'items.*.medication_name' => 'required|string|max:255',
             'items.*.dosage'         => 'required|string|max:100',
             'items.*.frequency'      => 'required|string|max:100',
             'items.*.duration'       => 'required|string|max:100',
@@ -83,5 +83,62 @@ class PrescriptionController extends Controller
                 'data'    => $prescription->load('items'),
             ], 201);
         });
+    }
+
+    // جلب وصفات الطبيب
+    public function index(Request $request)
+    {
+        $user   = $request->user();
+        $doctor = $user->doctor;
+
+        if (!$doctor) {
+            return response()->json([
+                'success' => false,
+                'message' => 'هذه الخدمة متاحة للأطباء فقط',
+            ], 403);
+        }
+
+        $prescriptions = Prescription::where('doctor_id', $doctor->id)
+            ->with(['patient.user', 'items'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($prescription) {
+                return [
+                    'id'         => $prescription->id,
+                    'date'       => $prescription->created_at->format('Y-m-d'),
+                    'diagnosis'  => $prescription->diagnosis,
+                    'notes'      => $prescription->notes,
+                    'valid_until' => $prescription->valid_until,
+                    'patient'    => [
+                        'id'    => $prescription->patient?->id,
+                        'name'  => $prescription->patient?->user?->full_name,
+                        'phone' => $prescription->patient?->user?->phone,
+                    ],
+                    'items' => $prescription->items->map(function ($item) {
+                        return [
+                            'id'              => $item->id,
+                            'medication_name' => $item->medication_name,
+                            'dosage'          => $item->dosage,
+                            'frequency'       => $item->frequency,
+                            'duration'        => $item->duration,
+                            'instructions'    => $item->instructions,
+                        ];
+                    }),
+                ];
+            });
+
+        if ($prescriptions->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'data'    => [],
+                'message' => 'لا توجد وصفات طبية سابقة',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $prescriptions,
+            'count'   => $prescriptions->count(),
+        ]);
     }
 }
