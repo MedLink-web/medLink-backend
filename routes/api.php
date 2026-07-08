@@ -32,6 +32,7 @@ Route::get('/clinics',                        [ClinicController::class,         
 Route::get('/clinics/{id}',                   [ClinicController::class,          'show']);
 Route::get('/clinics/{id}/slots',             [AppointmentSlotController::class, 'availableSlots']);
 Route::get('/medications/search', [MedicationSearchController::class, 'search']);
+Route::get('/pharmacies', [PharmacyProfileController::class, 'index']);
 
 
 Route::middleware('auth:sanctum')->group(function () {

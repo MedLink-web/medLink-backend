@@ -82,4 +82,25 @@ class PharmacyProfileController extends Controller
             ]
         ]);
     }
+
+    // 3️⃣ جلب كل الصيدليات (عام — للمرضى)
+    public function index()
+    {
+        $pharmacies = Pharmacy::orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($pharmacy) {
+                return [
+                    'id'      => $pharmacy->id,
+                    'name'    => $pharmacy->pharmacy_name,
+                    'phone'   => $pharmacy->pharmacy_phone,
+                    'address' => $pharmacy->pharmacy_address,
+                    'email'   => $pharmacy->pharmacy_email,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data'    => $pharmacies,
+        ]);
+    }
 }
