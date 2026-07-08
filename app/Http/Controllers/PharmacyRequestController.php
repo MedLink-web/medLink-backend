@@ -66,8 +66,8 @@ class PharmacyRequestController extends Controller
     // 1️⃣ جلب كل الطلبات المعلقة
     public function index()
     {
-        $requests = PharmacyRequest::where('status', 'pending')
-            ->orderBy('created_at', 'desc')
+
+        $requests = PharmacyRequest::orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([

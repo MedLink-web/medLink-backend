@@ -60,4 +60,19 @@ class AdminDashboardController extends Controller
             ],
         ]);
     }
+    // إحصائيات لوحة التحكم
+    public function stats()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_clinics'            => \App\Models\Clinic::count(),
+                'total_pharmacies'         => \App\Models\Pharmacy::count(),
+                'pending_clinic_requests'  => \App\Models\ClinicRequest::where('status', 'pending')->count(),
+                'pending_pharmacy_requests' => \App\Models\PharmacyRequest::where('status', 'pending')->count(),
+                'total_patients'           => \App\Models\Patient::count(),
+                'total_doctors'            => \App\Models\Doctor::count(),
+            ],
+        ]);
+    }
 }

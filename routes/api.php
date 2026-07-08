@@ -100,4 +100,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/admin/users/{id}/toggle',      [AdminUserController::class, 'toggleActive']);
 
     Route::get('/admin/statistics', [AdminDashboardController::class, 'statistics']);
+
 });
