@@ -12,6 +12,7 @@ use App\Mail\PharmacyRejectedMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class PharmacyRequestController extends Controller
 {
@@ -139,13 +140,21 @@ class PharmacyRequestController extends Controller
         $pharmacyRequest->update(['status' => 'approved']);
 
         // 5️⃣ إرسال الإيميل
-        Mail::to($pharmacyRequest->pharmacy_email)->send(
-            new PharmacyApprovedMail(
-                $pharmacyRequest->pharmacy_name,
-                $pharmacyRequest->pharmacy_email,
-                $password
-            )
-        );
+        try {
+            Mail::to($pharmacyRequest->pharmacy_email)->send(
+                new PharmacyApprovedMail(
+                    $pharmacyRequest->pharmacy_name,
+                    $pharmacyRequest->pharmacy_email,
+                    $password
+                )
+            );
+        } catch (\Throwable $e) {
+            Log::error('فشل إرسال إيميل الموافقة للصيدلية رقم ' . $pharmacyRequest->id . ': ' . $e->getMessage());
+            return response()->json([
+                'success' => true,
+                'message' => 'تم قبول الطلب وإنشاء الحساب، لكن تعذر إرسال إيميل الإشعار للصيدلية.',
+            ]);
+        }
 
         return response()->json([
             'success' => true,
