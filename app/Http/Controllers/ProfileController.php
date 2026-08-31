@@ -15,11 +15,11 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'name'          => $user->name,
+                'name'          => $user->full_name,
                 'email'         => $user->email,
                 'phone'         => $user->phone,
                 'role'          => $user->role,
-                'full_name'     => $patient?->full_name,
+                'full_name'     => $patient?->full_name ?? $user->full_name,
                 'date_of_birth' => $patient?->date_of_birth,
                 'gender'        => $patient?->gender,
             ]
@@ -49,18 +49,19 @@ class ProfileController extends Controller
         }
 
         $user->update([
-            'name'  => $request->name,
-            'phone' => $request->phone,
+            'full_name' => $request->input('full_name', $request->name),
+            'phone'     => $request->phone,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'تم تحديث الملف الشخصي بنجاح',
             'data'    => [
-                'name'  => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'role'  => $user->role,
+                'name'      => $user->full_name,
+                'full_name' => $user->full_name,
+                'email'     => $user->email,
+                'phone'     => $user->phone,
+                'role'      => $user->role,
             ]
         ]);
     }
